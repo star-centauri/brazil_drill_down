@@ -1,0 +1,388 @@
+<!-- Styles -->
+<style>
+    #chartdiv {
+        width: 100%;
+    }
+</style>
+    
+<!-- Resources -->
+<!-- 
+    Caso você pretenda reproduzir o mapa do Brasil é necessário utilizar 
+    <script src="https://www.amcharts.com/lib/4/geodata/brazilHigh.js"></script>
+    ou
+    <script src="https://www.amcharts.com/lib/4/geodata/brazilLow.js"></script>
+
+    dataviz e animated são só temas prontos do amCharts, não são obrigatórios.
+-->
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/maps.js"></script>
+<script src="https://www.amcharts.com/lib/4/geodata/usaLow.js"></script>
+<script src="https://www.amcharts.com/lib/4/geodata/brazilHigh.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/dataviz.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+    
+<!-- Chart code -->
+<script>
+    am4core.ready(function() {
+        // Variaveis
+        let regionalSeries = {},
+            chart = undefined,
+            zoomOut = undefined,
+            polygonSeries = undefined,
+            polygonTemplate = undefined,
+            currentSeries = undefined;
+    
+        // estilos prontos
+        am4core.useTheme(am4themes_dataviz);
+        am4core.useTheme(am4themes_animated);
+        
+        // Criação do mapa
+        chart = am4core.create("chartdiv", am4maps.MapChart);
+        chart.maxZoomLevel = 64;
+        
+        // Adicionar definição do mapa
+        chart.geodata = am4geodata_brazilHigh;
+        
+        // Adicionar uma projeção, há varios modelos de projeções em https://www.amcharts.com/docs/v4/chart-types/map/#Setting_projection
+        chart.projection = new am4maps.projections.Miller();
+        
+        // botão que cuida do zoom out
+        zoomOut = chart.tooltipContainer.createChild(am4core.ZoomOutButton);
+        zoomOut.align = "right";
+        zoomOut.valign = "top";
+        zoomOut.margin(20, 20, 20, 20);
+        zoomOut.events.on("hit", function() {
+        if (currentSeries) {
+            currentSeries.hide();
+        }
+        chart.goHome();
+        zoomOut.hide();
+        currentSeries = regionalSeries.BR.series;
+        currentSeries.show();
+        });
+        zoomOut.hide();
+        
+        // Cria as demarcações dos estados
+        polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+        polygonSeries.useGeodata = true;
+        polygonSeries.calculateVisualCenter = true;
+        
+        // configurações de texto que conterá no tooltip e background
+        polygonTemplate = polygonSeries.mapPolygons.template;
+        polygonTemplate.tooltipText = "{name}";
+        polygonTemplate.fill = chart.colors.getIndex(0);
+        
+        // Carregamento dos dados de uma http requisição
+        chart.events.on("ready", loadStores);
+        
+        // Loads store data
+        function loadStores() {
+            /*
+                Caso seus dados já estejam guardados numa requisição você pode se utilizar do DataSource (https://www.amcharts.com/docs/v4/reference/datasource/)
+                var loader = new am4core.DataSource();
+                loader.url = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-160/TargetStores.json";
+                loader.events.on("parseended", function(ev) {
+                    setupStores(ev.target.data);
+                });
+                loader.load();
+            */
+            
+            setupStores([
+                {  
+                    "pesquisador": "pesquisador #01",
+                    "bairro":"São Cristóvão",
+                    "estado_sigla":"RJ",
+                    "longitude":"-43.223465",
+                    "latitude":"-22.900010",
+                    "cidade": "Rio de Janeiro",
+                    "visitas":100
+                },
+                {  
+                    "pesquisador": "pesquisador #01",
+                    "bairro":"Banqueta",
+                    "estado_sigla":"RJ",
+                    "longitude":"-44.260421",
+                    "latitude":"-22.957705",
+                    "cidade":"Angra dos Reis",
+                    "visitas":90
+                },
+                {  
+                    "pesquisador": "pesquisador #01",
+                    "bairro":"Curicica",
+                    "estado_sigla":"RJ",
+                    "longitude":"-43.385251",
+                    "latitude":"-22.952493",
+                    "cidade":"Rio de Janeiro",
+                    "visitas":200
+                },
+                {  
+                    "pesquisador": "pesquisador #02",
+                    "bairro":"Dom Pedro II",
+                    "estado_sigla":"RJ",
+                    "longitude":"-42.021401",
+                    "latitude":"-22.969491",
+                    "cidade":"Arraial do Cabo",
+                    "visitas":256
+                },
+                {  
+                    "pesquisador": "pesquisador #02",
+                    "bairro":"Estrada Velha",
+                    "estado_sigla":"RJ",
+                    "longitude":"-42.079625",
+                    "latitude":"-22.926364",
+                    "cidade":"Cabo Frio",
+                    "visitas":543
+                },
+                {  
+                    "pesquisador": "pesquisador #03",
+                    "bairro":"Santo Amaro",
+                    "estado_sigla":"SP",
+                    "longitude":"-46.689014",
+                    "latitude":"-23.631088",
+                    "cidade":"São Paulo",
+                    "visitas":300
+                },
+                {  
+                    "pesquisador": "pesquisador #04",
+                    "bairro":"Capivari",
+                    "estado_sigla":"SP",
+                    "longitude":"-46.585319",
+                    "latitude":"-23.867796",
+                    "cidade":"São Bernardo do Campo",
+                    "visitas":543
+                },
+                {  
+                    "pesquisador": "pesquisador #04",
+                    "bairro":"SubSetor Leste",
+                    "estado_sigla":"SP",
+                    "longitude":"-47.787490",
+                    "latitude":"-21.183096",
+                    "cidade":"Ribeirao Preto",
+                    "visitas":50
+                },
+                {  
+                    "pesquisador": "terceiros",
+                    "bairro":"Jardim Jaragua",
+                    "estado_sigla":"SP",
+                    "longitude":"-49.134504",
+                    "latitude":"-22.261428",
+                    "cidade":"Bauru",
+                    "visitas":189
+                },
+                {  
+                    "pesquisador": "terceiros",
+                    "bairro":"Centro",
+                    "estado_sigla":"SP",
+                    "longitude":"-46.272387",
+                    "latitude":"-23.836868",
+                    "cidade":"Santos",
+                    "visitas":543
+                }
+            ]);
+        }
+        
+        // Criação das series
+        function createSeries(heatfield) {
+            var series = chart.series.push(new am4maps.MapImageSeries());
+            series.dataFields.value = heatfield;
+            
+            // Criação da tooltip de cada ponto do mapa
+            var template = series.mapImages.template;
+            template.verticalCenter = "middle";
+            template.horizontalCenter = "middle";
+            template.propertyFields.latitude = "lat";
+            template.propertyFields.longitude = "long";
+            template.tooltipText = "{name}:\n [bold]{visits} visitas[/]";
+            
+            // Criação do círculo que pulsa
+            var pulsation = template.createChild(am4core.Circle);
+            pulsation.radius = 3;
+            pulsation.fill = am4core.color("#fff");
+            pulsation.verticalCenter = "middle";
+            pulsation.horizontalCenter = "middle";
+            pulsation.nonScaling = true;
+
+            // Crição do círculo estático
+            var circle = template.createChild(am4core.Circle);
+            circle.radius = 10;
+            circle.fillOpacity = 0.7;
+            circle.verticalCenter = "middle";
+            circle.horizontalCenter = "middle";
+            circle.nonScaling = true;
+            
+            // Texto que fica nos círculos, mostra o quantitativo de dados que tem naquele ponto
+            var label = template.createChild(am4core.Label);
+            label.text = "{stores}";
+            label.fill = am4core.color("#fff");
+            label.verticalCenter = "middle";
+            label.horizontalCenter = "middle";
+            label.nonScaling = true;
+        
+            // Configurações dos círculos
+            series.heatRules.push({
+                target: circle,
+                property: "radius",
+                min: 10,
+                max: 30
+            });
+            series.heatRules.push({
+                target: pulsation,
+                property: "radius",
+                min: 20,
+                max: 40
+            });
+            series.heatRules.push({
+                target: pulsation,
+                property: "scale",
+                min: 1,
+                max: 5
+            });
+
+            // Evento de animação que faz a pulsação
+            pulsation.events.on("inited", function(event){
+                animateBullet(event.target);
+            });
+            function animateBullet(circle) {
+                var animation = circle.animate([{ property: "scale", from: 1, to: 5 }, { property: "opacity", from: 1, to: 0 }], 1000, am4core.ease.circleOut);
+                animation.events.on("animationended", function(event){
+                    animateBullet(event.target.object);
+                })
+            }
+        
+            // Adiciona a funcionalidade de up drill-down, ou seja, quando clicar nos círculos ele vai dando um zoom in e aparecendo mais dados por area
+            series.mapImages.template.events.on("hit", function(ev) {
+            
+                // Determine o que será clicado
+                var data = ev.target.dataItem.dataContext;
+            
+                // Validação para verificar se o dado clicado existe
+                if (!data.target) {
+                    return;
+                }
+            
+                // Criar as séries se não existirem
+                if (!regionalSeries[data.target].series) {
+                    regionalSeries[data.target].series = createSeries("stores");
+                    regionalSeries[data.target].series.data = data.markerData;
+                }
+            
+                // Ocultar série atual
+                if (currentSeries) {
+                    currentSeries.hide();
+                }
+            
+                // que faz o zoom
+                if (data.type == "state") {
+                    var statePolygon = polygonSeries.getPolygonById("BR-" + data.state);
+                    chart.zoomToMapObject(statePolygon);
+                }
+                else if (data.type == "city") {
+                    chart.zoomToGeoPoint({
+                       latitude: data.lat,
+                       longitude: data.long
+                    }, 64, true);
+                }
+                zoomOut.show();
+            
+                // Mostrar novas séries
+                currentSeries = regionalSeries[data.target].series;
+                currentSeries.show();
+            });
+            
+            return series;
+        }
+        
+        function setupStores(data) { 
+            // Inicializar os niveis regionais das series
+            regionalSeries.BR = {
+                markerData: [],
+                series: createSeries("stores")
+            };
+            
+            // Adicionar series atuais
+            currentSeries = regionalSeries.BR.series;
+            
+            // Processar o dado
+            am4core.array.each(data, function(store) {
+            
+                // Modelo
+                var store = {
+                    researcher: store.pesquisador,
+                    state: store.estado_sigla,
+                    long: am4core.type.toNumber(store.longitude),
+                    lat: am4core.type.toNumber(store.latitude),
+                    location: store.bairro,
+                    city: store.cidade,
+                    visits: am4core.type.toNumber(store.visitas)
+                };
+            
+                // Processar os niveis regionais do modelo
+                if (regionalSeries[store.state] == undefined) {
+                    var statePolygon = polygonSeries.getPolygonById("BR-" + store.state);
+                    if (statePolygon) {
+                        // adiconar estado
+                        regionalSeries[store.state] = {
+                            target: store.state,
+                            type: "state",
+                            name: statePolygon.dataItem.dataContext.name,
+                            visits: store.visits,
+                            stores: 1,
+                            lat: statePolygon.visualLatitude,
+                            long: statePolygon.visualLongitude,
+                            state: store.state,
+                            researcher: store.researcher,
+                            markerData: []
+                        };
+                        regionalSeries.BR.markerData.push(regionalSeries[store.state]);
+                
+                    }
+                }
+                else {
+                    regionalSeries[store.state].stores += 1;
+                    regionalSeries[store.state].visits += store.visits;
+                    regionalSeries[store.state].researcher = store.researcher;
+                }
+            
+                // Procesar cidades modelo
+                if (regionalSeries[store.city] == undefined) {
+                    regionalSeries[store.city] = {
+                        target: store.city,
+                        type: "city",
+                        name: store.city,
+                        visits: store.visits,
+                        stores: 1,
+                        lat: store.lat,
+                        long: store.long,
+                        state: store.state,
+                        researcher: store.researcher,
+                        markerData: []
+                    };
+                    regionalSeries[store.state].markerData.push(regionalSeries[store.city]);
+                }
+                else {
+                    regionalSeries[store.city].stores += 1;
+                    regionalSeries[store.city].visits += store.visits;
+                    regionalSeries[store.city].researcher = store.researcher;
+                }
+            
+                // Processar armazenamento individual
+                regionalSeries[store.city].markerData.push({
+                    name: store.location,
+                    visits: store.visits,
+                    stores: 1,
+                    lat: store.lat,
+                    long: store.long,
+                    state: store.state,
+                    researcher: store.pesquisador
+                });
+            
+            });
+        
+            regionalSeries.BR.series.data = regionalSeries.BR.markerData;
+        }
+    
+    }); // end am4core.ready()
+</script>
+    
+<!-- HTML -->
+<div id="chartdiv"></div>
